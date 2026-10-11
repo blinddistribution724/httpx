@@ -1,20 +1,20 @@
 /*********************************************************************
  * HTTPX                                                             *
- *                                                                   *
+ * *
  * A simple command-line tool to make HTTP requests and generate     *
  * code snippets in multiple languages (cURL, JavaScript, Python,    *
  * Rust, Java).                                                      *
- *                                                                   *
+ * *
  * Features: Custom headers, JSON formatting, response timing,       *
- *           multiline body input, code generation                   *
- *                                                                   *
+ * multiline body input, code generation                   *
+ * *
  * Compile: gcc -o httpx httpx.c -lcurl                              *
  * Run:     ./httpx                                                  *
- *                                                                   *
+ * *
  * Dependencies: libcurl                                             *
- *   Ubuntu/Debian: sudo apt-get install libcurl4-openssl-dev        *
- *   Fedora/RHEL:   sudo dnf install libcurl-devel                   *
- *   macOS:         brew install curl                                *
+ * Ubuntu/Debian: sudo apt-get install libcurl4-openssl-dev        *
+ * Fedora/RHEL:   sudo dnf install libcurl-devel                   *
+ * macOS:         brew install curl                                *
  *********************************************************************/
 
  #include <stdio.h>
@@ -59,9 +59,10 @@
      size_t realsize = size * nmemb;
      ResponseData *mem = (ResponseData *)userp;
  
+     /* Reallocate memory to accommodate the new chunk of data */
      char *ptr = realloc(mem->memory, mem->size + realsize + 1);
      if(!ptr) {
-         printf("Not enough memory!\n");
+         printf("Not enough memory (realloc returned NULL)!\n");
          return 0;
      }
  
@@ -125,7 +126,9 @@
          printf("  headers: {\n");
          for(int i = 0; i < req->header_count; i++) {
              char header_copy[MAX_HEADER_LEN];
-             strcpy(header_copy, req->headers[i]);
+             strncpy(header_copy, req->headers[i], MAX_HEADER_LEN - 1);
+             header_copy[MAX_HEADER_LEN - 1] = '\0';
+             
              char *colon = strchr(header_copy, ':');
              if(colon) {
                  *colon = '\0';
@@ -140,7 +143,6 @@
      }
  
      if(strlen(req->body) > 0) {
- 
          if(req->body[0] == '{' || req->body[0] == '[') {
              printf("  body: JSON.stringify(%s)\n", req->body);
          } else {
@@ -163,7 +165,9 @@
          printf("headers = {\n");
          for(int i = 0; i < req->header_count; i++) {
              char header_copy[MAX_HEADER_LEN];
-             strcpy(header_copy, req->headers[i]);
+             strncpy(header_copy, req->headers[i], MAX_HEADER_LEN - 1);
+             header_copy[MAX_HEADER_LEN - 1] = '\0';
+
              char *colon = strchr(header_copy, ':');
              if(colon) {
                  *colon = '\0';
@@ -212,7 +216,9 @@
  
      for(int i = 0; i < req->header_count; i++) {
          char header_copy[MAX_HEADER_LEN];
-         strcpy(header_copy, req->headers[i]);
+         strncpy(header_copy, req->headers[i], MAX_HEADER_LEN - 1);
+         header_copy[MAX_HEADER_LEN - 1] = '\0';
+
          char *colon = strchr(header_copy, ':');
          if(colon) {
              *colon = '\0';
@@ -255,7 +261,9 @@
  
      for(int i = 0; i < req->header_count; i++) {
          char header_copy[MAX_HEADER_LEN];
-         strcpy(header_copy, req->headers[i]);
+         strncpy(header_copy, req->headers[i], MAX_HEADER_LEN - 1);
+         header_copy[MAX_HEADER_LEN - 1] = '\0';
+
          char *colon = strchr(header_copy, ':');
          if(colon) {
              *colon = '\0';
@@ -286,15 +294,15 @@
  void generate_code_menu(Request *req) {
      int choice;
      printf("\n%s┌─ Generate Code ─────────────────────────────────┐%s\n", COLOR_MAGENTA, COLOR_RESET);
-     printf("%s│%s  1. cURL                                        %s│%s\n", COLOR_MAGENTA, COLOR_RESET, COLOR_MAGENTA, COLOR_RESET);
-     printf("%s│%s  2. JavaScript (Fetch)                          %s│%s\n", COLOR_MAGENTA, COLOR_RESET, COLOR_MAGENTA, COLOR_RESET);
-     printf("%s│%s  3. Python (requests)                           %s│%s\n", COLOR_MAGENTA, COLOR_RESET, COLOR_MAGENTA, COLOR_RESET);
-     printf("%s│%s  4. Rust (reqwest)                              %s│%s\n", COLOR_MAGENTA, COLOR_RESET, COLOR_MAGENTA, COLOR_RESET);
-     printf("%s│%s  5. Java (HttpClient)                           %s│%s\n", COLOR_MAGENTA, COLOR_RESET, COLOR_MAGENTA, COLOR_RESET);
-     printf("%s│%s  6. All Languages                               %s│%s\n", COLOR_MAGENTA, COLOR_RESET, COLOR_MAGENTA, COLOR_RESET);
+     printf("%s│%s  1. cURL                                         %s│%s\n", COLOR_MAGENTA, COLOR_RESET, COLOR_MAGENTA, COLOR_RESET);
+     printf("%s│%s  2. JavaScript (Fetch)                           %s│%s\n", COLOR_MAGENTA, COLOR_RESET, COLOR_MAGENTA, COLOR_RESET);
+     printf("%s│%s  3. Python (requests)                            %s│%s\n", COLOR_MAGENTA, COLOR_RESET, COLOR_MAGENTA, COLOR_RESET);
+     printf("%s│%s  4. Rust (reqwest)                                %s│%s\n", COLOR_MAGENTA, COLOR_RESET, COLOR_MAGENTA, COLOR_RESET);
+     printf("%s│%s  5. Java (HttpClient)                            %s│%s\n", COLOR_MAGENTA, COLOR_RESET, COLOR_MAGENTA, COLOR_RESET);
+     printf("%s│%s  6. All Languages                                %s│%s\n", COLOR_MAGENTA, COLOR_RESET, COLOR_MAGENTA, COLOR_RESET);
      printf("%s└─────────────────────────────────────────────────┘%s\n", COLOR_MAGENTA, COLOR_RESET);
      printf("\nSelect language: ");
-     scanf("%d", &choice);
+     if(scanf("%d", &choice) != 1) choice = 0;
      getchar();
  
      switch(choice) {
@@ -318,12 +326,18 @@
  void execute_request(Request *req) {
      CURL *curl;
      CURLcode res;
-     ResponseData response = {0};
+     ResponseData response = {NULL, 0};
      struct curl_slist *headers_list = NULL;
      clock_t start, end;
  
+     /* Allocate 1 byte initially for the callback to handle correctly */
      response.memory = malloc(1);
+     if (response.memory == NULL) {
+         printf("%s[✗] Fatal: Memory allocation failed%s\n", COLOR_RED, COLOR_RESET);
+         return;
+     }
      response.size = 0;
+     response.memory[0] = '\0';
  
      curl_global_init(CURL_GLOBAL_DEFAULT);
      curl = curl_easy_init();
@@ -338,6 +352,8 @@
          curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, req->method);
          curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
          curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&response);
+         /* Handle common user agent to avoid 403 blocks */
+         curl_easy_setopt(curl, CURLOPT_USERAGENT, "httpx/1.0");
  
          for(int i = 0; i < req->header_count; i++) {
              headers_list = curl_slist_append(headers_list, req->headers[i]);
@@ -384,7 +400,7 @@
  
              if(response.memory && (response.memory[0] == '{' || response.memory[0] == '[')) {
                  format_json(response.memory);
-             } else {
+             } else if (response.memory) {
                  printf("%s\n", response.memory);
              }
              printf("%s---------------------%s\n\n", COLOR_CYAN, COLOR_RESET);
@@ -394,7 +410,10 @@
          curl_easy_cleanup(curl);
      }
  
-     free(response.memory);
+     /* Always free response.memory even if curl fails to avoid leaks */
+     if (response.memory) {
+         free(response.memory);
+     }
      curl_global_cleanup();
  }
  
@@ -429,14 +448,13 @@
      int first_line = 1;
  
      while(total < max_len - 1 && fgets(line, sizeof(line), stdin)) {
- 
+         /* Check for end-of-input marker @@@ */
          if(strcmp(line, "@@@\n") == 0 || strcmp(line, "@@@\r\n") == 0) {
              break;
          }
  
          size_t len = strlen(line);
          if(total + len < max_len - 1) {
- 
              if(!first_line && total < max_len - 2) {
                  body[total++] = '\n';
              }
@@ -463,29 +481,27 @@
      int indent = 0;
      int in_string = 0;
      char prev_char = 0;
+     size_t len = strlen(json_str);
  
-     for(size_t i = 0; i < strlen(json_str); i++) {
+     for(size_t i = 0; i < len; i++) {
          char c = json_str[i];
  
          if(c == '"' && prev_char != '\\') {
              in_string = !in_string;
              putchar(c);
          }
- 
          else if(in_string) {
              putchar(c);
          }
- 
          else if(c == '{' || c == '[') {
              putchar(c);
              indent++;
-             if(i + 1 < strlen(json_str) && json_str[i+1] != '}' && json_str[i+1] != ']') {
+             if(i + 1 < len && json_str[i+1] != '}' && json_str[i+1] != ']') {
                  printf("\n%*s", indent * 2, "");
              }
          }
          else if(c == '}' || c == ']') {
              indent--;
- 
              if(prev_char != '{' && prev_char != '[') {
                  printf("\n%*s", indent * 2, "");
              }
@@ -519,10 +535,12 @@
      req->url[strcspn(req->url, "\n")] = 0;
  
      printf("Enter Method (GET/POST/PUT/DELETE/PATCH) [GET]: ");
-     fgets(req->method, sizeof(req->method), stdin);
-     req->method[strcspn(req->method, "\n")] = 0;
-     if(strlen(req->method) == 0) strcpy(req->method, "GET");
+     if(fgets(req->method, sizeof(req->method), stdin)) {
+         req->method[strcspn(req->method, "\n")] = 0;
+         if(strlen(req->method) == 0) strcpy(req->method, "GET");
+     }
  
+     /* Convert method to uppercase */
      for(int i = 0; req->method[i]; i++) {
          if(req->method[i] >= 'a' && req->method[i] <= 'z') {
              req->method[i] = req->method[i] - 32;
@@ -536,10 +554,11 @@
          printf("Enter headers (format: Key: Value, empty line to finish):\n");
          while(req->header_count < MAX_HEADERS) {
              printf("  Header %d: ", req->header_count + 1);
-             fgets(req->headers[req->header_count], MAX_HEADER_LEN, stdin);
-             req->headers[req->header_count][strcspn(req->headers[req->header_count], "\n")] = 0;
-             if(strlen(req->headers[req->header_count]) == 0) break;
-             req->header_count++;
+             if(fgets(req->headers[req->header_count], MAX_HEADER_LEN, stdin)) {
+                 req->headers[req->header_count][strcspn(req->headers[req->header_count], "\n")] = 0;
+                 if(strlen(req->headers[req->header_count]) == 0) break;
+                 req->header_count++;
+             }
          }
      }
  
@@ -576,8 +595,9 @@
      req->follow_redirects = (input[0] != 'n' && input[0] != 'N');
  
      printf("Timeout in seconds (0 for none) [0]: ");
-     fgets(input, sizeof(input), stdin);
-     req->timeout = atol(input);
+     if(fgets(input, sizeof(input), stdin)) {
+         req->timeout = atol(input);
+     }
  
      printf("Verbose mode? (y/n) [n]: ");
      fgets(input, sizeof(input), stdin);
@@ -618,8 +638,13 @@
      while(1) {
          print_menu();
          printf("Select option: ");
-         scanf("%d", &choice);
-         getchar();
+         if(scanf("%d", &choice) != 1) {
+             /* Clear stdin if input is not an integer */
+             while (getchar() != '\n'); 
+             choice = 0;
+         } else {
+             getchar(); /* Consume newline */
+         }
  
          switch(choice) {
              case 1:
